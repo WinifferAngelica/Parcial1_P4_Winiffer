@@ -6,6 +6,10 @@
 
 obj/ 
 .vs/
+bin/
+
+*.db
+
 
 
 # dotenv files
