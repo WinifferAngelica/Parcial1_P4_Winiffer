@@ -1,9 +1,9 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
-using Parcial1_P4_Winiffer.Modelos;
+using Parcial1_P4_Winiffer.Models;
 
-namespace Parcial1_P4_Winiffer.Services
-{
+namespace Parcial1_P4_Winiffer.Services;
+
     public class NumbersService(IConfiguration configuration)
     {
         private readonly string _connectionString = configuration.GetConnectionString("SqliteConnection")!;
@@ -65,9 +65,10 @@ namespace Parcial1_P4_Winiffer.Services
                     WHERE Id = @Id;
                     ";
             using var connection = createConection;
-            return await connection.QuerySingleOrDefaultAsync<NumberRecord>(consulta, new { Id = id });
+            var fila = await connection.QuerySingleOrDefaultAsync<NumberRow>(consulta, new { Id = id });
+            return fila is null ? null : ToRecord(fila);
 
-        }
+    }
 
 
         public async Task<IEnumerable<NumberRecord>> GetListAsync()
@@ -79,11 +80,23 @@ namespace Parcial1_P4_Winiffer.Services
             """;
 
             using var connection = createConection;
-            return await connection.QueryAsync<NumberRecord>(consulta);
-
-        }
-
+            var rows = await connection.QueryAsync<NumberRow>(consulta);
+            return rows.Select(ToRecord).ToList();
 
     }
 
+
+    private static NumberRecord ToRecord(NumberRow row) =>
+        new(checked((int)row.Id), row.Fecha, row.Numero, row.Resultado);
+
+    private sealed class NumberRow()
+    {
+        public long Id { get; set; }
+        public DateTime Fecha { get; set; }
+        public double Numero { get; set; }
+        public double Resultado { get; set; }
+    }
+
+
 }
+
